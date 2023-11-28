@@ -1,0 +1,361 @@
+void setup() {
+  Serial.begin(9600);
+}
+String RL[5];
+bool registro;
+int registroO, registroL;
+void loop() {
+  int A, B, C, D;
+  bool validar = false, mDeciaml, mBinario;
+  float decimal;
+  int op, op1;
+  String Op, ca, db;
+  float R[5];
+  String opDisponible = "\n\t OPERACIONES DISPONIBLES \n SUMA \n RESTA \n MULTIPLICACION \n DIVISION \n AND \n OR \n XOR \n LIMPIAR";
+  String msg1 = "OPERACION A REALIZAR: ";
+  Serial.println(opDisponible);
+  Serial.print(msg1);
+  while (Serial.available() == 0) {
+  }
+
+  while (Serial.available() > 0 && !validar) {
+    String inputString = Serial.readStringUntil('\n');
+    // Delimitador
+    char delimiter = ' ';
+    char delimiter_2 = ',';
+    // Encontrar la posición del primer delimitador
+    int delimiterPosition = inputString.indexOf(delimiter);
+    // Extraer la operación
+    String substring1 = inputString.substring(0, delimiterPosition);
+    String cadena = substring1;
+
+    if (cadena == "SUMA") {
+      Op = "SUMA";
+    } else if (cadena == "RESTA") {
+      Op = "RESTA";
+
+    } else if (cadena == "MULTIPLICACION") {
+      Op = "MULTIPLICACION";
+
+    } else if (cadena == "DIVISION") {
+      Op = "DIVISION";
+
+    } else if (cadena == "AND") {
+      Op = "AND";
+
+    } else if (cadena == "OR") {
+      Op = "OR";
+
+    } else if (cadena == "XOR") {
+      Op = "XOR";
+
+    } else if (cadena == "LIMPIAR") {
+      Op = "LIMPIAR";
+      for (int i = 0; i < 5; i++) {
+        R[i] = 0;
+        registroO = 0;
+      }
+      for (int i = 0; i < 5; i++) {
+        RL[i] = "";
+        registroL = 0;
+      }
+    } else {
+      Serial.println("\nNO SE RECONOCE EL COMANDO!!");
+      Op = "ERROR";
+    }
+    cadena = "";
+    // Avanzar la posición delimitadora
+    delimiterPosition++;
+    // Extraer primera parte
+    String substring2 = inputString.substring(delimiterPosition, inputString.indexOf(delimiter_2, delimiterPosition));
+    ca = substring2;
+    // Avanzar la posición delimitadora
+    delimiterPosition = inputString.indexOf(delimiter_2, delimiterPosition) + 1;
+    // Extraer segunda parte
+    String substring3 = inputString.substring(delimiterPosition);
+    db = substring3;
+
+    if (ca[0] == 'R' && db[0] == 'R') {
+      if (String(ca[1]).toInt() >= 0 && String(ca[1]).toInt() <= 4 && String(db[1]).toInt() >= 0 && String(db[1]).toInt() <= 4) {
+        registro = true;
+        validar = true;
+        A = String(ca[1]).toInt();
+        B = String(db[1]).toInt();
+        Serial.println(inputString);
+      } else {
+        Serial.println(inputString + "\nREGISTROS NO VALIDOS");
+        registro = false;
+        Op = "ERROR";
+      }
+    }
+
+    if (ca[0] != 'R' && db[0] != 'R') {
+      C = String(ca[0]).toInt();
+      A = String(ca[1]).toInt();
+      D = String(db[0]).toInt();
+      B = String(db[1]).toInt();
+
+      if ((A == 1 || A == 0) && (B == 1 || B == 0) && (C == 1 || C == 0) && (D == 1 || D == 0)) {
+        validar = true;
+        registro = false;
+        Serial.println(inputString);
+      } else {
+        Serial.println("\nSOLO NÚMEROS BOOLEANOS");
+        Op = "ERROR";
+        registro = false;
+      }
+    }
+
+    if ((ca[0] == 'R' && db[0] != 'R') || (ca[0] != 'R' && db[0] == 'R')) {
+      Serial.println("FORMATO NO VALIDO");
+      Op = "ERROR";
+    }
+
+    while (Op != "ERROR" && Op != "LIMPIAR") {
+      for (int i = 0; i < 5; i++) {
+        if (R[i] == 0) {
+          registroO = i;
+          break;
+        }
+        if (registroO >= 5) {
+          registroO = 0;
+        }
+      }
+
+      for (int i = 0; i < 5; i++) {
+        if (RL[i].length() == 0) {
+          registroL = i;
+          break;
+        }
+        if (registroL == 5) {
+          registroL = 0;
+        }
+      }
+
+      if (Op == "SUMA") {
+        if (registro) {
+          R[registroO] = R[A] + R[B];
+          registroO++;
+        } else {
+          decimal = ((C * 2) + A) + ((D * 2) + B);
+          R[registroO] = decimal;
+          registroO++;
+        }
+        mDeciaml = true;
+        mBinario = false;
+      }
+
+      if (Op == "RESTA") {
+        if (registro) {
+          R[registroO] = R[A] - R[B];
+          registroO++;
+        } else {
+          decimal = ((C * 2) + A) - ((D * 2) + B);
+          R[registroO] = decimal;
+          registroO++;
+        }
+        mDeciaml = true;
+        mBinario = false;
+      }
+
+      if (Op == "MULTIPLICACION") {
+        if (registro) {
+          R[registroO] = R[A] * R[B];
+          registroO++;
+        } else {
+          decimal = ((C * 2) + A) * ((D * 2) + B);
+          R[registroO] = decimal;
+          registroO++;
+        }
+        mDeciaml = true;
+        mBinario = false;
+      }
+
+      if (Op == "DIVISION") {
+        if (registro) {
+          if (R[A] == 0 && R[B] == 0) {
+            Serial.println("ERROR");
+            mDeciaml = false;
+            mBinario = false;
+          } else if (R[B] == 0) {
+            Serial.println("INFINITO");
+            mDeciaml = false;
+            mBinario = false;
+          } else {
+            R[registroO] = R[A] / R[B];
+            registroO++;
+          }
+        } else {
+          if (!A && !B && !C && !D) {
+            Serial.println("ERROR");
+            mDeciaml = false;
+            mBinario = false;
+          } else if ((A && !B && !C && !D) || (!A && !B & C && !D) || (A && !B && C && !D)) {
+            Serial.println("INFINITO");
+            mDeciaml = false;
+            mBinario = false;
+          } else if (A && B && !C && D) {
+            decimal = 0.3;  // 0.3
+            R[registroO] = decimal;
+            registroO++;
+            mDeciaml = true;
+            mBinario = false;
+          } else if (A && !B && C && D) {
+            decimal = 1.5;  // 1.5
+            R[registroO] = decimal;
+            registroO++;
+            mDeciaml = true;
+            mBinario = false;
+          } else if (!A && B && C && D) {
+            decimal = 0.6;  //0.6
+            R[registroO] = decimal;
+            registroO++;
+            mDeciaml = true;
+            mBinario = false;
+          } else if (A && !B && !C && D) {
+            decimal = 0.5;  //0.5
+            R[registroO] = decimal;
+            registroO++;
+            mDeciaml = true;
+            mBinario = false;
+          } else {
+            decimal = ((C * 2) + A) / ((D * 2) + B);
+            R[registroO] = decimal;
+            registroO++;
+            mDeciaml = true;
+            mBinario = false;
+          }
+        }
+      }
+
+      if (Op == "AND") {
+        if (registro) {
+          ca = RL[A];
+          db = RL[B];
+          C = String(ca[0]).toInt();
+          A = String(ca[1]).toInt();
+          D = String(db[0]).toInt();
+          B = String(db[1]).toInt();
+          if (C && D) {
+            op1 = 1;
+          } else {
+            op1 = 0;
+          }
+          if (A && B) {
+            op = 1;
+          } else {
+            op = 0;
+          }
+          RL[registroL] = (String(op1) + String(op));
+        } else {
+          if (C && D) {
+            op1 = 1;
+          } else {
+            op1 = 0;
+          }
+          if (A && B) {
+            op = 1;
+          } else {
+            op = 0;
+          }
+          RL[registroL] = (String(op1) + String(op));
+        }
+        registroL++;
+        mBinario = true;
+        mDeciaml = false;
+      }
+
+      if (Op == "OR") {
+        if (registro) {
+          ca = RL[A];
+          db = RL[B];
+          C = String(ca[0]).toInt();
+          A = String(ca[1]).toInt();
+          D = String(db[0]).toInt();
+          B = String(db[1]).toInt();
+          if (C || D) {
+            op1 = 1;
+          } else {
+            op1 = 0;
+          }
+          if (A || B) {
+            op = 1;
+          } else {
+            op = 0;
+          }
+          RL[registroL] = (String(op1) + String(op));
+        } else {
+          if (C || D) {
+            op1 = 1;
+          } else {
+            op1 = 0;
+          }
+          if (A || B) {
+            op = 1;
+          } else {
+            op = 0;
+          }
+          RL[registroL] = (String(op1) + String(op));
+        }
+        registroL++;
+        mBinario = true;
+        mDeciaml = false;
+      }
+
+      if (Op == "XOR") {
+        if (registro) {
+          ca = RL[A];
+          db = RL[B];
+          C = String(ca[0]).toInt();
+          A = String(ca[1]).toInt();
+          D = String(db[0]).toInt();
+          B = String(db[1]).toInt();
+          if ((!C && D) || (C && !D)) {
+            op1 = 1;
+          } else {
+            op1 = 0;
+          }
+          if ((!A && B) || (A && !B)) {
+            op = 1;
+          } else {
+            op = 0;
+          }
+          RL[registroL] = (String(op1) + String(op));
+        } else {
+          if ((!C && D) || (C && !D)) {
+            op1 = 1;
+          } else {
+            op1 = 0;
+          }
+          if ((!A && B) || (A && !B)) {
+            op = 1;
+          } else {
+            op = 0;
+          }
+          RL[registroL] = (String(op1) + String(op));
+        }
+        registroL++;
+        mBinario = true;
+        mDeciaml = false;
+      }
+      break;
+    }
+
+    if (mDeciaml && Op != "LIMPIAR") {
+      Serial.println("\nOPERACIÓN ARITMETICA GUARDADA EN [R" + String(registroO - 1) + "]");
+    }
+    Serial.print("OPERACIÓN ARITMETICA: ");
+    for (int i = 0; i < 5; i++) {
+      Serial.print("[R" + String(i) + "] = " + R[i] + "   ");
+    }
+    Serial.println();
+    if (mBinario && Op != "LIMPIAR") {
+      Serial.println("OPERACIÓN BINARIA GUARDADA EN [R" + String(registroL - 1) + "]");
+    }
+    Serial.print("OPERACIÓN BINARIA: ");
+    for (int i = 0; i < 5; i++) {
+      Serial.print("[R" + String(i) + "] = " + RL[i] + "   ");
+    }
+    Serial.println();
+  }
+}
